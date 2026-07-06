@@ -58,7 +58,7 @@ async function renderSlides(post, opts={}){
     const out=[];
     for(let i=0;i<post.slides.length;i++){
       const { html, template } = buildSlideHtml(post, i, opts);
-      await page.setContent(html, {waitUntil:'networkidle0'});
+      await page.setContent(html, {waitUntil:'load'});
       try{
         await page.evaluateHandle('document.fonts.ready');
         const fam=(opts.pack.brand.font&&opts.pack.brand.font.family)||'Manrope';
