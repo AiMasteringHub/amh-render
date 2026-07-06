@@ -1,0 +1,11 @@
+{
+  "name": "amh-render-service",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": { "start": "node src/server.js" },
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "express": "^4.19.2",
+    "puppeteer": "^23.11.1"
+  }
+}
