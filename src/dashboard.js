@@ -8,7 +8,9 @@ class Dashboard{
     this.key=renderKey;
   }
   async req(p,init={}){
-    const res=await fetch(this.baseUrl+p,{...init,headers:{'X-Render-Key':this.key,...(init.headers||{})}});
+    const sep=p.includes('?')?'&':'?';
+    const url=this.baseUrl+p+sep+'k='+encodeURIComponent(this.key||'');
+    const res=await fetch(url,{...init,headers:{'X-Render-Key':this.key,...(init.headers||{})}});
     if(!res.ok){const b=await res.text().catch(()=>'');throw new DashboardError(res.status,'Dashboard '+res.status+' '+p+(b?(' — '+b):''));}
     if(res.status===204) return null;
     const ct=res.headers.get('content-type')||'';
