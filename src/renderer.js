@@ -32,7 +32,8 @@ function buildSlideHtml(post, i, opts){
                         : templateForPost(opts.postIndex||0, TEMPLATES.length);
   const tpl = TEMPLATES[templateIndex];
   if(!tpl) throw new Error('templateIndex '+templateIndex+' out of range for this pack ('+TEMPLATES.length+' layouts)');
-  const imageUrl = toEmbeddable(opts.imageUrl || post.imageUrl || null);
+  const slide    = post.slides[i] || {};
+  const imageUrl = toEmbeddable(slide.imageUrl || opts.imageUrl || post.imageUrl || null);
   // pick the logo the layout needs: light/accent bg (logoColor:'dark') → logoOnLight; else logoOnDark
   const wantLight = tpl.logoColor==='dark';
   const logoRaw = wantLight ? (brand.logoOnLight || brand.logoOnDark)
