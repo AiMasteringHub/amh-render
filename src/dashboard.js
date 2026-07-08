@@ -23,8 +23,8 @@ class Dashboard{
     return {
       id:String(c.cccId),
       clientId:String(c.strategyId),
-      tag:c.topic||'',
-      imageUrl:c.imageUrl||null,
+      tag:c.topic||'', 
+      slides:(c.slides||[]).map(s=>({ main:s.text, accent:null, cta:/cta/i.test(s.label||'')?s.text:null, imageUrl:s.imageUrl||null })),      
       templateIndex:(c.templateIndex!=null?c.templateIndex:null),
       slides:(c.slides||[]).map(s=>({ main:s.text, accent:null, cta:/cta/i.test(s.label||'')?s.text:null }))
     };
