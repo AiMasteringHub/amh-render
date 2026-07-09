@@ -8,9 +8,7 @@ class Dashboard{
     this.key=renderKey;
   }
   async req(p,init={}){
-    const sep=p.includes('?')?'&':'?';
-    const url=this.baseUrl+p+sep+'k='+encodeURIComponent(this.key||'');
-    const res=await fetch(url,{...init,headers:{'X-Render-Key':this.key,...(init.headers||{})}});
+    const res=await fetch(this.baseUrl+p,{...init,headers:{'X-Render-Key':this.key,...(init.headers||{})}});
     if(!res.ok){const b=await res.text().catch(()=>'');throw new DashboardError(res.status,'Dashboard '+res.status+' '+p+(b?(' — '+b):''));}
     if(res.status===204) return null;
     const ct=res.headers.get('content-type')||'';
@@ -23,10 +21,18 @@ class Dashboard{
     return {
       id:String(c.cccId),
       clientId:String(c.strategyId),
-      tag:c.topic||'', 
-      slides:(c.slides||[]).map(s=>({ main:s.text, accent:null, cta:/cta/i.test(s.label||'')?s.text:null, imageUrl:s.imageUrl||null })),      
+      tag:c.topic||'',
+      imageUrl:c.imageUrl||null,                        // whole-post fallback image
       templateIndex:(c.templateIndex!=null?c.templateIndex:null),
-      slides:(c.slides||[]).map(s=>({ main:s.text, accent:null, cta:/cta/i.test(s.label||'')?s.text:null }))
+      // Carry EACH slide's own image through (get_card_payload emits s.imageUrl per
+      // slide from content_card_bg). renderer.js uses slide.imageUrl first, so this
+      // is what makes "every slide has its own image" actually render.
+      slides:(c.slides||[]).map(s=>({
+        main:s.text,
+        accent:null,
+        cta:/cta/i.test(s.label||'')?s.text:null,
+        imageUrl:s.imageUrl||null
+      }))
     };
   }
 
