@@ -10,11 +10,18 @@ const PORT=process.env.PORT||8080;
 const dashboard=new Dashboard(process.env.DASHBOARD_API_BASE_URL, process.env.RENDER_KEY);
 
 let browserPromise=null;
-function getBrowser(){
-  if(!browserPromise) browserPromise=puppeteer.launch({headless:'new',
-    args:['--no-sandbox','--disable-setuid-sandbox','--font-render-hinting=none','--disable-dev-shm-usage']});
-  return browserPromise;
-}
+function puppeteer.launch({
+  headless: 'new',
+  protocolTimeout: 120000,
+  args: [
+    '--no-sandbox',
+    '--disable-setuid-sandbox',
+    '--font-render-hinting=none',
+    '--disable-background-timer-throttling',
+    '--disable-backgrounding-occluded-windows',
+    '--disable-renderer-backgrounding'
+  ]
+});
 
 const app=express();
 app.use(express.json());
