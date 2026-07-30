@@ -57,10 +57,12 @@ function loadPack(raw){
 //   opts = { clientId, brand?, packsDir? }
 function resolvePack(opts){
   opts = opts || {};
-  const dir = path.join(opts.packsDir || PACKS_DIR, String(opts.clientId||''));
+  const base = opts.packsDir || PACKS_DIR;
+  let dir = path.join(base, String(opts.clientId||''));
+  if(!fs.existsSync(dir)) dir = path.join(base, 'amh');   // house layouts until a bespoke pack exists
   const fromDir = fs.existsSync(dir) ? loadPackFromDir(dir) : { buildTemplates:null, slideInner:null, brandRaw:null };
   return loadPack({
-    brand: opts.brand || fromDir.brandRaw,     // dashboard tokens win; brand.json is the local fallback
+    brand: opts.brand || fromDir.brandRaw,     // dashboard tokens still win
     buildTemplates: fromDir.buildTemplates,
     slideInner: fromDir.slideInner
   });
