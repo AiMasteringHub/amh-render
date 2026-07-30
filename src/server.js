@@ -31,7 +31,7 @@ function enqueue(cardId){
       console.log('rendered', cardId);
     }catch(e){
       console.error('render failed', cardId, e.message||e);
-      try{ await dashboard.failed(cardId, String(e.message||e).slice(0,300)); }
+      try{ await dashboard.fail(cardId, e.message||e); }
       catch(e2){ console.error('could not report failure', cardId, e2.message||e2); }
       browserPromise = null; // browser may be wedged after a timeout — relaunch next render
     }
