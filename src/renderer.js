@@ -19,9 +19,13 @@ function buildSlideHtml(post, i, opts){
   const theme = makeTheme(brand);
   const TEMPLATES = pack.buildTemplates(theme);
   const slideInner = pack.slideInner || defaultSlideInner;
-  const templateIndex = (opts.templateIndex!=null) ? opts.templateIndex
+  
+  let templateIndex = (opts.templateIndex!=null) ? opts.templateIndex
                         : templateForPost(opts.postIndex||0, TEMPLATES.length);
+  // bound any stored index into this pack's layout count
+  templateIndex = ((Number(templateIndex) % TEMPLATES.length) + TEMPLATES.length) % TEMPLATES.length;
   const tpl = TEMPLATES[templateIndex];
+  
   if(!tpl) throw new Error('templateIndex '+templateIndex+' out of range for this pack ('+TEMPLATES.length+' layouts)');
   const slide = post.slides[i] || {};
   const imageUrl = toEmbeddable(slide.imageUrl || opts.imageUrl || post.imageUrl || null);
