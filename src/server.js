@@ -10,9 +10,10 @@ function getBrowser(){
   if(!browserPromise) browserPromise = puppeteer.launch({
     headless: 'new',
     protocolTimeout: 300000,
-    args: [
+        args: [
       '--no-sandbox',
       '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
       '--font-render-hinting=none',
       '--disable-background-timer-throttling',
       '--disable-backgrounding-occluded-windows',
