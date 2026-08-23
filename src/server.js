@@ -29,11 +29,13 @@ function enqueue(cardId){
       const browser=await getBrowser();
       await renderCardAndSave(dashboard, cardId, {browser});
       console.log('rendered', cardId);
-    }catch(e){
+        }catch(e){
       console.error('render failed', cardId, e.message||e);
       try{ await dashboard.fail(cardId, e.message||e); }
       catch(e2){ console.error('could not report failure', cardId, e2.message||e2); }
-      browserPromise = null; // browser may be wedged after a timeout — relaunch next render
+      // close the old browser so its Chrome processes are reclaimed (prevents EAGAIN leak)
+      try{ const b = browserPromise && await browserPromise; if(b) await b.close(); }catch(_){}
+      browserPromise = null;
     }
   });
 }
