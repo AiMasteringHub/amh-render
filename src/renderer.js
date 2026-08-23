@@ -38,14 +38,27 @@ function buildSlideHtml(post, i, opts){
   return { html, template: tpl.name };
 }
 
+// Wrap an op with its own deadline — a stuck compositor/GPU handoff otherwise
+// hangs until protocolTimeout (5 min) with the browser sitting at 0% CPU, doing
+// nothing but waiting. Fail fast instead so the caller can retry on a fresh page.
+function withDeadline(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error(label+' timed out after '+ms+'ms')), ms))
+  ]);
+}
+
 async function renderOne(page, post, i, opts, fam){
   const { html, template } = buildSlideHtml(post, i, opts);
-  await page.setContent(html, { waitUntil:'networkidle0' });
+  await withDeadline(page.setContent(html, { waitUntil:'networkidle0' }), 20000, 'setContent');
   try{
-    await page.evaluateHandle('document.fonts.ready');
-    await page.evaluate(f=>document.fonts.load('700 100px "'+f+'"'), fam);
+    await withDeadline(page.evaluateHandle('document.fonts.ready'), 10000, 'fonts.ready');
+    await withDeadline(page.evaluate(f=>document.fonts.load('700 100px "'+f+'"'), fam), 10000, 'fonts.load');
   }catch(e){}
-  const buffer = await page.screenshot({ type:'png', clip:{x:0,y:0,width:1080,height:1920} });
+  const buffer = await withDeadline(
+    page.screenshot({ type:'png', clip:{x:0,y:0,width:1080,height:1920} }),
+    20000, 'screenshot'
+  );
   return { index:i+1, buffer, template };
 }
 
@@ -63,17 +76,37 @@ async function renderSlides(post, opts={}){
     n
   );
   let next = 0;
-  async function worker(){
+  async function openPage(){
     const page = await browser.newPage();
     await page.setViewport({ width:1080, height:1920, deviceScaleFactor:1 });
+    return page;
+  }
+  // a page that just hung on setContent/screenshot may not close cleanly either —
+  // don't let a slow close() block getting a replacement page.
+  function discardPage(page){
+    Promise.race([
+      page.close().catch(()=>{}),
+      new Promise(res=>setTimeout(res, 3000))
+    ]).catch(()=>{});
+  }
+  async function worker(){
+    let page = await openPage();
     try{
       while(true){
         const i = next++;
         if(i >= n) break;
-        out[i] = await renderOne(page, post, i, opts, fam);
+        try{
+          out[i] = await renderOne(page, post, i, opts, fam);
+        }catch(e){
+          // one retry on a fresh page — covers a stuck compositor on this specific page/tab
+          console.error('slide', i, 'failed, retrying on a fresh page:', e.message||e);
+          discardPage(page);
+          page = await openPage();
+          out[i] = await renderOne(page, post, i, opts, fam);
+        }
       }
     } finally {
-      await page.close();
+      discardPage(page);
     }
   }
   try{
