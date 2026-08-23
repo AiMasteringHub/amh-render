@@ -15,6 +15,7 @@ function getBrowser(){
         '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
+        '--disable-gpu',
         '--font-render-hinting=none',
         '--disable-background-timer-throttling',
         '--disable-backgrounding-occluded-windows',
