@@ -1,16 +1,15 @@
-// AMH "Framed Dark" — bespoke slide markup. v2, reworked to the Layout-variety brief
-// (Layout-variety-brief-GENERIC.md): every layout differs on BACKGROUND TYPE +
-// DOMINANT ELEMENT, not text position. The family signature stays constant across
-// layouts (thin inset frame, ••• page mark, circle-arrow ↗ cue, caps type voice,
-// accent discipline) — that is the brand; the design changes underneath it.
-//
-// Sources: AMH-Design-Extraction.md (Family C) + Layout-variety-brief-GENERIC.md.
+// AMH "Framed Dark" — bespoke slide markup. v3: photo support added.
+// When a slide carries an image (opts.imageUrl, per-slide from content_card_bg),
+// the photo becomes the background, under a dark wash so the caps voice stays
+// readable. No photo => the original gradient/iso backgrounds, unchanged.
+// The inverted accent layout keeps its solid block and never takes a photo.
+// Family signature (thin inset frame, ••• page mark, circle-arrow, caps voice,
+// accent discipline) is untouched.
 //
 // tpl flags this pack understands (set in templates.js):
-//   bg:'iso'|'accent'|'ink'|'panel'|'split'   background type (Rule 1 axis 1)
-//   dominant:'headline'|'quote'|'number'|'stat'|'band'   dominant element (axis 3)
-//   pos:'low'|'top'|'centre'  align:'left'|'centre'      secondary variation only
-// Every tpl also declares meta:{bg,dominant,inverts,photo} for the Rule 2 self-check.
+//   bg:'iso'|'accent'|'ink'|'panel'|'split'   background type
+//   dominant:'headline'|'quote'|'number'|'stat'|'band'   dominant element
+//   pos:'low'|'top'|'centre'  align:'left'|'centre'
 
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function rgba(rgb,a){return 'rgba('+rgb[0]+','+rgb[1]+','+rgb[2]+','+a+')';}
@@ -34,6 +33,12 @@ function isoBackground(theme,aRgb){
     +'linear-gradient(180deg, '+theme.INK+' 0%, '+theme.DARK+' 55%, #0B1512 100%);';
 }
 
+// Photo layer + legibility wash (photo slides only).
+function photoLayer(url){
+  return '<div style="position:absolute;inset:0;background:center/cover no-repeat url(\''+url+'\');"></div>';
+}
+const PHOTO_WASH='linear-gradient(180deg, rgba(12,19,22,.32) 0%, rgba(12,19,22,.52) 45%, rgba(12,19,22,.94) 100%)';
+
 function circleArrow(col,ink,filled){
   return '<div style="display:inline-flex;align-items:center;justify-content:center;width:96px;height:96px;'
     +'border-radius:50%;'+(filled?('background:'+col+';'):('border:2px solid '+col+';'))+'">'
@@ -53,13 +58,16 @@ function slideInner(s,i,post,tpl,n,opts,theme){
   const isContent=!isCover&&!isPunch&&!isCta;
   const inverted=tpl.bg==='accent';
 
-  // role colours flip on the inverted layout (Rule 1 axis 1: inverted block)
+  // role colours flip on the inverted layout
   const TXT=inverted?AI:'#FFFFFF';
   const ACC=inverted?AI:A;                        // furniture: frame/dots/arrow/subhead
   const SUB=inverted?rgba([0,0,0],.62):A;         // subhead
   const frameCol=inverted?rgba([0,0,0],.45):'rgba(255,255,255,.75)';
 
   // ----- background -----
+  // A slide with its own image gets the photo (under a dark wash); the inverted
+  // accent layout keeps its solid block. Without a photo, nothing changes.
+  const photo=(!inverted&&opts.imageUrl)?opts.imageUrl:null;
   let bgCss='';
   if(tpl.bg==='iso') bgCss=isoBackground(theme,aRgb);
   else if(tpl.bg==='accent') bgCss='background:'+A+';';
@@ -67,8 +75,17 @@ function slideInner(s,i,post,tpl,n,opts,theme){
   else if(tpl.bg==='panel') bgCss='background:linear-gradient(180deg,'+theme.PANEL+' 0%,'+theme.DARK+' 100%);';
   let layers='';
   if(tpl.bg==='split'){
-    layers+='<div style="position:absolute;left:0;right:0;top:0;height:66%;'+isoBackground(theme,aRgb)+'"></div>'
-      +'<div style="position:absolute;left:0;right:0;top:66%;bottom:0;background:'+A+';"></div>';
+    if(photo){
+      layers+='<div style="position:absolute;left:0;right:0;top:0;height:66%;overflow:hidden;">'
+        +photoLayer(photo)
+        +'<div style="position:absolute;inset:0;background:'+PHOTO_WASH+';"></div></div>';
+    } else {
+      layers+='<div style="position:absolute;left:0;right:0;top:0;height:66%;'+isoBackground(theme,aRgb)+'"></div>';
+    }
+    layers+='<div style="position:absolute;left:0;right:0;top:66%;bottom:0;background:'+A+';"></div>';
+  } else if(photo){
+    layers+=photoLayer(photo)
+      +'<div style="position:absolute;inset:0;background:'+PHOTO_WASH+';"></div>';
   } else {
     layers+='<div style="position:absolute;inset:0;'+bgCss+'"></div>';
   }
@@ -83,30 +100,25 @@ function slideInner(s,i,post,tpl,n,opts,theme){
     ? '<div style="text-align:center;margin-top:26px;"><img src="'+opts.logoUrl+'" alt="logo" style="height:120px;width:auto;"></div>'
     : '';
 
-  // ----- the dominant element (Rule 1 axis 3) -----
+  // ----- the dominant element -----
   const caps='text-transform:uppercase;letter-spacing:.015em;';
   const italic=isContent?'font-style:italic;':'';
   const main=isPunch?s.accent:s.main;
   let block='';
 
   if(tpl.dominant==='quote'&&!isCover&&!isCta){
-    // oversized accent quote mark + ITALIC SENTENCE-CASE quote (axis 5: case mix)
     block+='<div style="font-size:240px;line-height:.55;font-weight:700;color:'+ACC+';height:120px;">&ldquo;</div>'
       +'<p style="margin:0;font-weight:400;font-style:italic;line-height:1.35;color:'+TXT+';font-size:'+(String(main||'').length>150?'48px':'56px')+';">'+esc(main)+'</p>';
   } else if(tpl.dominant==='number'&&isContent){
-    // giant OUTLINED number (stroke in accent), headline small beneath
     block+='<div style="font-size:330px;line-height:.8;font-weight:700;color:transparent;-webkit-text-stroke:3px '+ACC+';margin-bottom:44px;">'+String(i).padStart(2,'0')+'</div>'
       +'<p style="margin:0;font-weight:400;line-height:1.25;color:'+TXT+';'+caps+'font-size:46px;">'+esc(main)+'</p>';
   } else if(tpl.dominant==='stat'&&isContent){
-    // one huge accent lead + small sentence-case caption (axis 3: statistic / axis 4: scale)
     const sp=leadSplit(main);
     block+='<p style="margin:0;font-weight:700;line-height:1.05;color:'+ACC+';'+caps+'font-size:110px;">'+esc(sp.lead)+'</p>'
       +(sp.rest?'<p style="margin:40px 0 0;font-weight:400;line-height:1.45;color:'+TXT+';font-size:38px;">'+esc(sp.rest)+'</p>':'');
   } else if(tpl.dominant==='band'&&tpl.bg==='split'){
-    // split: caps headline in the dark 2/3; the accent band carries the sub-line
     block+='<p style="margin:0;font-weight:400;'+italic+'line-height:1.18;color:#FFFFFF;'+caps+'font-size:'+headlineSize(main,isCover,isPunch)+';">'+esc(main)+'</p>';
   } else {
-    // headline-dominant (the reference look; covers/CTAs of every layout land here too)
     block+='<p style="margin:0;font-weight:400;'+italic+'line-height:1.18;color:'+TXT+';'+caps+'font-size:'+headlineSize(main,isCover,isPunch)+';">'+esc(main)+'</p>';
     if(!isPunch&&s.accent&&tpl.bg!=='split')
       block+='<p style="margin:36px 0 0;font-weight:400;line-height:1.35;color:'+SUB+';font-size:40px;">'+esc(s.accent)+'</p>';
@@ -116,7 +128,7 @@ function slideInner(s,i,post,tpl,n,opts,theme){
   if(isCta&&s.cta)
     block+='<p style="margin:36px 0 0;font-weight:700;color:'+(inverted?AI:A)+';'+caps+'font-size:44px;">'+esc(s.cta)+'</p>';
 
-  // ----- placement (secondary variation only) -----
+  // ----- placement -----
   const justify=isPunch?'center':(tpl.pos==='top'?'flex-start':(tpl.pos==='centre'?'center':'flex-end'));
   const alignTxt=(isPunch||tpl.align==='centre')?'center':'left';
   const padTop=tpl.pos==='top'?(isCover?'60px':'150px'):'0';
@@ -125,7 +137,6 @@ function slideInner(s,i,post,tpl,n,opts,theme){
   // split band content: the sub-line lives ON the band, in accentInk
   let bandRow='';
   if(tpl.bg==='split'){
-    // the band always carries something: the sub-line, the CTA, or the post tag as a label
     const bandTxt=s.accent||s.cta||post.tag||'';
     const isLabel=!s.accent&&!s.cta;
     bandRow='<div style="position:absolute;left:0;right:0;top:66%;bottom:0;display:flex;align-items:center;justify-content:center;padding:0 170px;">'
@@ -134,7 +145,7 @@ function slideInner(s,i,post,tpl,n,opts,theme){
       +'">'+esc(bandTxt)+'</p></div>';
   }
 
-  // circle-arrow ↗ — constant cue; filled on the last slide; ink-coloured on the band/inverted
+  // circle-arrow — constant cue; filled on the last slide
   const arrowOnAccent=inverted||tpl.bg==='split';
   const arrow='<div style="position:absolute;right:130px;bottom:120px;">'
     +circleArrow(arrowOnAccent?AI:A, arrowOnAccent?A:theme.INK, isLast)+'</div>';
