@@ -3,6 +3,10 @@
 // index number, quote mark, eyebrow, footer, chevron, logo slot — with every brand
 // literal parameterised through `theme`/`brand`. This is the DEFAULT markup a
 // configured pack uses. A bespoke pack ships its own slideInner and ignores this.
+//
+// v2: canvas is no longer fixed at 1080x1920. slideDocument reads opts.canvas
+// ({w,h}, from the pack; default 1080x1350) and the default markup's fixed
+// positions are set for the 1350 canvas.
 
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
@@ -16,13 +20,8 @@ function sizeFor(s,isCover,isPunch,isCta){
   return '52px';
 }
 
-// No-logo fallback: a neutral wordmark from brand.name (not AMH's "omh").
-// Text colour is brand-driven: on a light/accent background (color==='dark') use the
-// brand's ink; on a dark background use the brand's white. No AMH literal.
 function logoMarkup(color, logoUrl, brand){
   if(logoUrl){
-    // A real, correctly-coloured logo variant is chosen upstream (renderer picks
-    // logoOnDark / logoOnLight). No colour filter applied to a real logo.
     return '<img src="'+logoUrl+'" alt="logo" style="height:130px;width:auto;display:block;margin:0 auto;">';
   }
   const cols = (brand && brand.colours) || {};
@@ -38,7 +37,7 @@ function photoBackground(imageUrl, theme){
   return imageUrl ? ("center/cover no-repeat url('"+imageUrl+"')") : theme.PHOTO;
 }
 
-// Build the inner markup of one slide (assumes a 1080x1920 frame).
+// Build the inner markup of one slide (positions set for a 1080x1350 frame).
 // opts = { imageUrl, logoUrl, brand }, theme = makeTheme(brand)
 function defaultSlideInner(s,i,post,tpl,n,opts,theme){
   const imageUrl=opts.imageUrl, logoUrl=opts.logoUrl, brand=opts.brand;
@@ -48,7 +47,7 @@ function defaultSlideInner(s,i,post,tpl,n,opts,theme){
   if(tpl.showPhoto){
     const bg=photoBackground(imageUrl, theme);
     if(tpl.photoMode==='framed'){
-      layers+='<div style="position:absolute;left:88px;top:200px;width:904px;height:780px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.5);background:'+bg+';"></div>';
+      layers+='<div style="position:absolute;left:88px;top:190px;width:904px;height:560px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 24px 60px rgba(0,0,0,.5);background:'+bg+';"></div>';
     } else {
       layers+='<div style="position:absolute;inset:0;background:'+bg+';"></div>';
     }
@@ -56,12 +55,12 @@ function defaultSlideInner(s,i,post,tpl,n,opts,theme){
   if(tpl.showOverlay) layers+='<div style="position:absolute;inset:0;background:'+tpl.overlay+';"></div>';
   if(tpl.showGlow) layers+='<div style="position:absolute;left:-200px;bottom:-220px;width:820px;height:820px;border-radius:50%;background:radial-gradient(circle, '+theme.glowStrong+' 0%, '+theme.glowFade+' 70%);"></div>';
   if(tpl.showSheet){
-    layers+='<div style="position:absolute;left:0;right:0;bottom:0;height:1080px;background:'+theme.DARK+';border-top:1px solid rgba(255,255,255,.10);border-radius:60px 60px 0 0;box-shadow:0 -34px 70px rgba(0,0,0,.45);"></div>';
-    layers+='<div style="position:absolute;left:50%;bottom:1044px;transform:translateX(-50%);width:120px;height:7px;border-radius:999px;background:'+theme.sheetHandle+';"></div>';
+    layers+='<div style="position:absolute;left:0;right:0;bottom:0;height:760px;background:'+theme.DARK+';border-top:1px solid rgba(255,255,255,.10);border-radius:60px 60px 0 0;box-shadow:0 -34px 70px rgba(0,0,0,.45);"></div>';
+    layers+='<div style="position:absolute;left:50%;bottom:724px;transform:translateX(-50%);width:120px;height:7px;border-radius:999px;background:'+theme.sheetHandle+';"></div>';
   }
   if(tpl.showSpine){
-    layers+='<div style="position:absolute;left:70px;top:300px;bottom:230px;width:4px;border-radius:2px;background:'+A+';"></div>';
-    layers+='<div style="position:absolute;left:40px;top:300px;writing-mode:vertical-rl;color:'+A+';font-size:24px;letter-spacing:.3em;text-transform:uppercase;font-weight:600;">'+esc(post.tag)+'</div>';
+    layers+='<div style="position:absolute;left:70px;top:210px;bottom:160px;width:4px;border-radius:2px;background:'+A+';"></div>';
+    layers+='<div style="position:absolute;left:40px;top:210px;writing-mode:vertical-rl;color:'+A+';font-size:24px;letter-spacing:.3em;text-transform:uppercase;font-weight:600;">'+esc(post.tag)+'</div>';
   }
   let inner='';
   if(tpl.showIndex&&!isPunch) inner+='<div style="font-size:200px;line-height:.8;font-weight:700;color:transparent;-webkit-text-stroke:2px '+A+';margin-bottom:6px;">'+String(i+1).padStart(2,'0')+'</div>';
@@ -85,20 +84,22 @@ function defaultSlideInner(s,i,post,tpl,n,opts,theme){
   return layers+content;
 }
 
-// Full single-slide HTML document, exactly 1080x1920, ready to screenshot.
-// opts = { imageUrl, logoUrl, brand, theme, slideInner? }
+// Full single-slide HTML document at the pack's canvas size, ready to screenshot.
+// opts = { imageUrl, logoUrl, brand, theme, slideInner?, canvas? }
 function slideDocument(s,i,post,tpl,n,opts){
   opts=opts||{};
   const brand=opts.brand, theme=opts.theme;
-  const slideInner = opts.slideInner || defaultSlideInner;   // pack's markup or shared default
+  const slideInner = opts.slideInner || defaultSlideInner;
+  const W = (opts.canvas && Number(opts.canvas.w)) || 1080;
+  const H = (opts.canvas && Number(opts.canvas.h)) || 1350;
   const family = (brand && brand.font && brand.font.family) || 'Manrope';
   const fontUrl = (brand && brand.font && brand.font.url) ||
     'https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap';
   return '<!doctype html><html><head><meta charset="utf-8">'
     +'<link href="'+fontUrl+'" rel="stylesheet">'
     +'<style>*{box-sizing:border-box;}html,body{margin:0;padding:0;}'
-    +"body{width:1080px;height:1920px;font-family:'"+family+"','Manrope','Helvetica Neue',Arial,sans-serif;}"
-    +'.slide{position:relative;width:1080px;height:1920px;overflow:hidden;background:'+tpl.frameBg+';}</style></head>'
+    +"body{width:"+W+"px;height:"+H+"px;font-family:'"+family+"','Manrope','Helvetica Neue',Arial,sans-serif;}"
+    +'.slide{position:relative;width:'+W+'px;height:'+H+'px;overflow:hidden;background:'+tpl.frameBg+';}</style></head>'
     +'<body><div class="slide">'+slideInner(s,i,post,tpl,n,opts,theme)+'</div></body></html>';
 }
 
