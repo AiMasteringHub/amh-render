@@ -43,6 +43,10 @@ class Dashboard{
       }))
     };
   }
+   // GET /render/packs/:id -> the card's slide pack (templates.js + slideInner.js from SLIDE_PACKS)
+  async getPack(cardId){
+    return this.req('/render/packs/'+encodeURIComponent(cardId));
+  }
 
   // GET /render/clients/:sid/brand-kit -> brand tokens (null if the client has none yet).
   async getBrandKit(strategyId){
