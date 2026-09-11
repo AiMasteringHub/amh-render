@@ -1,15 +1,15 @@
 // Pull a card from the dashboard, load the client's brand/pack, render the slides,
 // upload each PNG (by slide number), then mark the card complete. On any error,
 // mark the card failed so the dashboard shows it.
-const { renderSlides } = require('./renderer');
-const { resolvePack, templateForPost } = require('./pack');
+const { renderSlides } = require('./renderer'); 
+const { resolvePackAsync, templateForPost } = require('./pack');
 const { makeTheme } = require('./brand');
 
 async function renderCardAndSave(dashboard, cardId, opts={}){
   try{
     const post = await dashboard.getPost(cardId);
-    const brandRaw = await dashboard.getBrandKit(post.clientId);
-    const pack = opts.pack || resolvePack({ clientId: post.clientId, brand: brandRaw });
+    const brandRaw = await dashboard.getBrandKit(post.clientId); 
+    const pack = opts.pack || await resolvePackAsync({ cccId: cardId, clientId: post.clientId, brand: brandRaw });
 
     const count = pack.buildTemplates(makeTheme(pack.brand)).length;
     const templateIndex = (opts.templateIndex!=null) ? opts.templateIndex
