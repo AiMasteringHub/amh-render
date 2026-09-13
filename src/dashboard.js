@@ -35,12 +35,21 @@ class Dashboard{
       // Carry EACH slide's own image through (get_card_payload emits s.imageUrl per
       // slide from content_card_bg). renderer.js uses slide.imageUrl first, so this
       // is what makes "every slide has its own image" actually render.
-      slides:(c.slides||[]).map(s=>({
-        main:s.text,
-        accent:null,
-        cta:/cta/i.test(s.label||'')?s.text:null,
-        imageUrl:s.imageUrl||null
-      }))
+      // CTA slide: the body keeps the slide text; the accent footer takes the short
+      // ctaLabel that get_card_payload sends (last sentence of the CTA text). The
+      // footer is dropped when no ctaLabel arrives, so the text is never drawn twice.
+      slides:(c.slides||[]).map(s=>{
+        const isCta=/cta/i.test(s.label||'');
+        const label=(isCta&&s.ctaLabel)?String(s.ctaLabel).trim():null;
+        let main=String(s.text||'').trim();
+        if(label&&main.endsWith(label)) main=main.slice(0,-label.length).trim();
+        return {
+          main:main,
+          accent:null,
+          cta:label,
+          imageUrl:s.imageUrl||null
+        };
+      })
     };
   }
    // GET /render/packs/:id -> the card's slide pack (templates.js + slideInner.js from SLIDE_PACKS)
