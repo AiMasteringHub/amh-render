@@ -3,6 +3,7 @@
 // ORDS does not reliably expose custom request headers to the PL/SQL auth check
 // (owa_util.get_cgi_env('HTTP_X_RENDER_KEY') comes back NULL), so the ?k= param is
 // what actually authenticates. amh_render_authorized accepts either.
+
 class DashboardError extends Error{
   constructor(status,message){super(message);this.status=status;this.name='DashboardError';}
 }
