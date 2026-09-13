@@ -4,6 +4,7 @@ const { makeTheme } = require('./brand');
 const { slideDocument, defaultSlideInner } = require('./vocabulary');
 const { templateForPost } = require('./pack');
 
+
 function toEmbeddable(p){
   if(!p) return null;
   if(/^(https?:|data:)/i.test(p)) return p;
