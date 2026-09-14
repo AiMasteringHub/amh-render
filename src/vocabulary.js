@@ -10,6 +10,14 @@
 
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
+/* spine tag: cut on a whole word, never mid-word */
+function spineTag(t){
+  t=String(t==null?'':t).trim();
+  if(t.length<=30)return t;
+  var cut=t.slice(0,30), sp=cut.lastIndexOf(' ');
+  return (sp>14?cut.slice(0,sp):cut).trim();
+}
+
 function sizeFor(s,isCover,isPunch,isCta){
   if(isPunch)return '62px';
   if(isCta)return '54px';
