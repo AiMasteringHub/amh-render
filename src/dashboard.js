@@ -41,13 +41,11 @@ class Dashboard{
       // footer is dropped when no ctaLabel arrives, so the text is never drawn twice.
       slides:(c.slides||[]).map(s=>{
         const isCta=/cta/i.test(s.label||'');
-        const label=(isCta&&s.ctaLabel)?String(s.ctaLabel).trim():null;
-        let main=String(s.text||'').trim();
-        if(label&&main.endsWith(label)) main=main.slice(0,-label.length).trim();
+        const text=String(s.text||'').trim();
         return {
-          main:main,
+          main:isCta?'':text,
           accent:null,
-          cta:label,
+          cta:isCta?text:null,
           imageUrl:s.imageUrl||null
         };
       })
