@@ -14,10 +14,36 @@ function toEmbeddable(p){
   return 'data:'+mime+';base64,'+buf.toString('base64');
 }
 
-// Canvas comes from the pack (SLIDE_PACKS.canvas_w/h). 1080 x 1350 unless the pack says otherwise.
-function canvasOf(pack){
+function canvasOf(pack, post, opts = {}){
   const c = (pack && pack.canvas) || {};
-  return { w: Number(c.w) || 1080, h: Number(c.h) || 1350 };
+
+  // Explicit render dimensions override the design pack.
+  // Used by Facebook to render 1080 x 1080.
+  const width =
+    Number(opts.width) ||
+    Number(post && post.width);
+
+  const height =
+    Number(opts.height) ||
+    Number(post && post.height);
+
+  if (width > 0 && height > 0) {
+    return { w: width, h: height };
+  }
+
+  // Safety fallback if platform is supplied but dimensions are not.
+  if (
+    post &&
+    String(post.platform || '').toLowerCase() === 'facebook'
+  ) {
+    return { w: 1080, h: 1080 };
+  }
+
+  // Normal design-pack dimensions, e.g. Instagram 1080 x 1350.
+  return {
+    w: Number(c.w) || 1080,
+    h: Number(c.h) || 1350
+  };
 }
 
 // Theme fields the packs read on top of what makeTheme already supplies.
@@ -42,8 +68,8 @@ function buildSlideHtml(post, i, opts){
   const brand = pack.brand;
   const theme = extendTheme(makeTheme(brand), brand);
   const TEMPLATES = pack.buildTemplates(theme);
-  const slideInner = pack.slideInner || defaultSlideInner;
-  const canvas = canvasOf(pack);
+  const slideInner = pack.slideInner || defaultSlideInner; 
+  const canvas = canvasOf(pack, post, opts);
 
   let templateIndex = (opts.templateIndex!=null) ? opts.templateIndex
                         : templateForPost(opts.postIndex||0, TEMPLATES.length);
@@ -91,8 +117,8 @@ async function renderSlides(post, opts={}){
     args:['--no-sandbox','--disable-setuid-sandbox','--font-render-hinting=none']
   });
   const n   = post.slides.length;
-  const fam = (opts.pack.brand.font && opts.pack.brand.font.family) || 'Manrope';
-  const canvas = canvasOf(opts.pack);
+  const fam = (opts.pack.brand.font && opts.pack.brand.font.family) || 'Manrope'; 
+  const canvas = canvasOf(opts.pack, post, opts);
   const out = new Array(n);
   const poolSize = Math.min(
     Math.max(1, Number(opts.concurrency || process.env.RENDER_CONCURRENCY || 4)),
