@@ -26,31 +26,34 @@ class Dashboard{
 
   // GET /render/cards/:id  -> our card payload, mapped to the engine's post shape.
   async getPost(cardId){
-    const c=await this.req('/render/cards/'+encodeURIComponent(cardId));
-    return {
-      id:String(c.cccId),
-      clientId:String(c.strategyId),
-      tag:c.topic||'',
-      imageUrl:c.imageUrl||null,                        // whole-post fallback image
-      templateIndex:(c.templateIndex!=null?c.templateIndex:null),
-      // Carry EACH slide's own image through (get_card_payload emits s.imageUrl per
-      // slide from content_card_bg). renderer.js uses slide.imageUrl first, so this
-      // is what makes "every slide has its own image" actually render.
-      // CTA slide: the body keeps the slide text; the accent footer takes the short
-      // ctaLabel that get_card_payload sends (last sentence of the CTA text). The
-      // footer is dropped when no ctaLabel arrives, so the text is never drawn twice.
-      slides:(c.slides||[]).map(s=>{
-        const isCta=/cta/i.test(s.label||'');
-        const text=String(s.text||'').trim();
-        return {
-          main:isCta?'':text,
-          accent:null,
-          cta:isCta?text:null,
-          imageUrl:s.imageUrl||null
-        };
-      })
-    };
-  }
+  const c = await this.req('/render/cards/'+encodeURIComponent(cardId));
+
+  return {
+    id:String(c.cccId),
+    clientId:String(c.strategyId),
+
+    // Keep render dimensions/platform from Oracle
+    platform:c.platform||null,
+    width:Number(c.width)||null,
+    height:Number(c.height)||null,
+
+    tag:c.topic||'',
+    imageUrl:c.imageUrl||null,
+    templateIndex:(c.templateIndex!=null?c.templateIndex:null),
+
+    slides:(c.slides||[]).map(s=>{
+      const isCta=/cta/i.test(s.label||'');
+      const text=String(s.text||'').trim();
+
+      return {
+        main:isCta?'':text,
+        accent:null,
+        cta:isCta?text:null,
+        imageUrl:s.imageUrl||null
+      };
+    })
+  };
+}
    // GET /render/packs/:id -> the card's slide pack (templates.js + slideInner.js from SLIDE_PACKS)
   async getPack(cardId){
     return this.req('/render/packs/'+encodeURIComponent(cardId));
