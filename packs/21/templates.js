@@ -1,34 +1,33 @@
-// AMH "Framed Dark" — layout set v3. Same six layouts as v2; the only change is
-// the meta photo flag: photo:'auto' means the layout shows a slide's own image
-// (under a dark wash) when one exists, and its original background when not.
-// The inverted accent layout stays photo:'no' — a photo would break its inversion.
+// Signature Property Styling - layout set. Canvas 1080 x 1350.
+// Style 10 descent (Elegant Serif Editorial) with photo integration.
+// All colours from theme. No hardcoded brand values.
+//
+// v2: Serif Editorial and Editorial Quote now show the slide's own photo
+// (under a cream-tinted wash) when one is set, instead of always being a
+// plain cream card. Dark Inversion stays photo:'no' - a photo would fight
+// its solid inverted block, the same reason Framed Dark's inverted layout
+// never takes one.
 //
 // Engine-contract fields: name, swatch, frameBg, logoColor.
-// Pack flags read by slideInner.js: bg, dominant, pos, align.
+// Pack flags read by slideInner.js: bg, dominant
 
-function buildTemplates(t){
-  const mk=(name,swatch,over)=>Object.assign(
-    {name,swatch,frameBg:t.INK,logoColor:'light',bg:'iso',dominant:'headline',pos:'low',align:'left'},over);
+function buildTemplates(t) {
+  const mk = (name, swatch, over) => Object.assign(
+    { name, swatch, frameBg: t.DARK || '#272624', logoColor: 'dark',
+      bg: 'cream', dominant: 'headline' }, over);
   return [
-    // 1. The reference look: iso-dark (or slide photo), thin-caps headline, lower-left.
-    mk('Framed authority',t.ACCENT,{
-      meta:{bg:'iso-dark',dominant:'headline',inverts:'no',photo:'auto'}}),
-    // 2. INVERTED: solid accent background, accentInk text + furniture, on-light logo.
-    mk('Inverted accent','#FFFFFF',{bg:'accent',pos:'centre',align:'centre',logoColor:'dark',frameBg:t.ACCENT,
-      meta:{bg:'solid-accent',dominant:'headline',inverts:'yes',photo:'no'}}),
-    // 3. Quote: solid ink (or slide photo), oversized accent quote mark, italic quote.
-    mk('Giant quote',t.INK,{bg:'ink',dominant:'quote',pos:'centre',
-      meta:{bg:'solid-ink',dominant:'quote-mark',inverts:'no',photo:'auto'}}),
-    // 4. Number: iso-dark (or slide photo), giant OUTLINED accent numeral, headline beneath.
-    mk('Outlined number',t.ACCENT,{dominant:'number',pos:'top',
-      meta:{bg:'iso-dark',dominant:'outlined-number',inverts:'no',photo:'auto'}}),
-    // 5. Stat: panel-tone (or slide photo), one huge accent lead + small caption.
-    mk('Stat lead','#FFFFFF',{bg:'panel',dominant:'stat',pos:'top',
-      meta:{bg:'panel-gradient',dominant:'huge-stat',inverts:'no',photo:'auto'}}),
-    // 6. Split band: dark/photo top 2/3 + solid accent band bottom 1/3 with the sub-line.
-    mk('Split band',t.ACCENT,{bg:'split',dominant:'band',
-      meta:{bg:'split-dark-accent',dominant:'accent-band',inverts:'partial',photo:'auto'}})
+    mk('Serif Editorial', t.ACCENT, {
+      meta: { bg: 'solid-cream', dominant: 'headline', inverts: 'no', photo: 'auto' } }),
+    mk('Photo Panel', t.DARK, { bg: 'photo-panel', logoColor: 'light',
+      meta: { bg: 'photo-cream-split', dominant: 'headline', inverts: 'no', photo: 'auto' } }),
+    mk('Arch Frame', t.ACCENT, { bg: 'arch',
+      meta: { bg: 'cream-arch', dominant: 'headline', inverts: 'no', photo: 'auto' } }),
+    mk('Editorial Quote', t.SECONDARY || t.ACCENT, { dominant: 'quote',
+      meta: { bg: 'solid-cream', dominant: 'quote-mark', inverts: 'no', photo: 'auto' } }),
+    mk('Dark Inversion', '#FFFFFF', { bg: 'dark', logoColor: 'light', frameBg: t.ACCENT,
+      meta: { bg: 'solid-dark', dominant: 'headline', inverts: 'yes', photo: 'no' } }),
+    mk('Framed Photo', t.ACCENT, { bg: 'framed-photo', logoColor: 'light',
+      meta: { bg: 'full-photo-inset', dominant: 'headline', inverts: 'no', photo: 'auto' } })
   ];
 }
-
-module.exports={ buildTemplates };
+module.exports = { buildTemplates };
