@@ -56,7 +56,10 @@ function slideInner(s, i, post, tpl, n, opts, theme) {
   const sec   = theme.SECONDARY  || '#8D8A87';
   const ink   = theme.INK        || dark;
   const aRgb  = theme.ACCENT_RGB || [235, 233, 226];
-  const font  = theme.FONT       || "'Georgia','Times New Roman',serif";
+  // Primary font = headings. Secondary font = text below the heading, CTA and footer.
+  // Secondary falls back to the primary font when the brand kit has none.
+  const font     = theme.FONT_HEAD || theme.FONT || "'Georgia','Times New Roman',serif";
+  const fontBody = theme.FONT_BODY || font;
 
   const isDark = bg === 'dark' || bg === 'framed-photo';
   const tc  = isDark ? cream : ink;
@@ -163,7 +166,7 @@ function slideInner(s, i, post, tpl, n, opts, theme) {
       + '<div style="width:80px;height:1px;background:' + rc + ';margin:28px auto 0"></div>';
 
     if (s.cta) {
-      out += '<p style="font-family:' + font + ';font-size:16px;letter-spacing:0.18em;'
+      out += '<p style="font-family:' + fontBody + ';font-size:16px;letter-spacing:0.18em;'
         + 'text-transform:uppercase;color:' + sc + ';margin:28px 0 0">'
         + esc(s.cta) + '</p>';
     }
@@ -201,7 +204,7 @@ function slideInner(s, i, post, tpl, n, opts, theme) {
       }
       out += '<div style="width:100px;height:1px;background:' + rc
         + ';margin:0 auto 24px"></div>'
-        + '<p style="font-family:' + font + ';font-size:20px;letter-spacing:0.18em;'
+        + '<p style="font-family:' + fontBody + ';font-size:20px;letter-spacing:0.18em;'
         + 'text-transform:uppercase;color:' + tc + ';margin:0">'
         + esc(s.cta) + '</p>';
 
@@ -215,7 +218,7 @@ function slideInner(s, i, post, tpl, n, opts, theme) {
       if (s.accent) {
         out += '<div style="width:60px;height:1px;background:' + rc
           + ';margin:24px auto"></div>'
-          + '<p style="font-family:' + font + ';font-style:italic;font-size:'
+          + '<p style="font-family:' + fontBody + ';font-style:italic;font-size:'
           + aSize(s.accent) + ';line-height:1.5;color:' + sc
           + ';margin:0">' + esc(s.accent) + '</p>';
       }
@@ -233,7 +236,7 @@ function slideInner(s, i, post, tpl, n, opts, theme) {
     var fc = isDark
       ? 'rgba(' + aRgb[0] + ',' + aRgb[1] + ',' + aRgb[2] + ',0.4)'
       : sec;
-    out += '<div style="position:absolute;bottom:52px;left:80px;font-family:' + font
+    out += '<div style="position:absolute;bottom:52px;left:80px;font-family:' + fontBody
       + ';font-size:12px;letter-spacing:0.22em;text-transform:uppercase;color:' + fc
       + '">' + esc(theme.FOOTER || theme.NAME) + '</div>';
   }
