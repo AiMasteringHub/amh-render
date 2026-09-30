@@ -44,7 +44,7 @@ function arrow(col) {
 }
 
 function slideInner(s, i, post, tpl, n, opts, theme) {
-  const isCover = tpl && tpl.kind === 'cover';
+  const isCover = i === 0;
   const isPunch = !s.main && !!s.accent;
   const isCta   = !!s.cta;
   const isLast  = i === n - 1;
