@@ -8,7 +8,7 @@ const { templateForPost } = require('./pack');
 // --- Optimisation 1: cache base64-encoded images per render run ---
 const _imgCache = new Map();
 function toEmbeddable(p){
-  if(!p) return null;
+  if(!p) return null; 
   if(/^(https?:|data:)/i.test(p)) return p;
   if(_imgCache.has(p)) return _imgCache.get(p);
   const buf=fs.readFileSync(p);
