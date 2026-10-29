@@ -101,10 +101,10 @@ function slideDocument(s,i,post,tpl,n,opts){
   const W = (opts.canvas && Number(opts.canvas.w)) || 1080;
   const H = (opts.canvas && Number(opts.canvas.h)) || 1350;
   const family = (brand && brand.font && brand.font.family) || 'Manrope';
-  const fontUrl = (brand && brand.font && brand.font.url) ||
-    'https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap';
+  const customFontUrl = brand && brand.font && brand.font.url;
+  const fontLink = customFontUrl ? '<link href="'+customFontUrl+'" rel="stylesheet">' : '';
   return '<!doctype html><html><head><meta charset="utf-8">'
-    +'<link href="'+fontUrl+'" rel="stylesheet">'
+    +fontLink
     +'<style>*{box-sizing:border-box;}html,body{margin:0;padding:0;}'
     +"body{width:"+W+"px;height:"+H+"px;font-family:'"+family+"','Manrope','Helvetica Neue',Arial,sans-serif;}"
     +'.slide{position:relative;width:'+W+'px;height:'+H+'px;overflow:hidden;background:'+tpl.frameBg+';}</style></head>'

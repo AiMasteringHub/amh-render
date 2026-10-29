@@ -1,4 +1,11 @@
 FROM ghcr.io/puppeteer/puppeteer:23.11.1
+
+# Install Manrope as a system font so Puppeteer renders it without network requests
+USER root
+COPY fonts /usr/local/share/fonts/manrope
+RUN fc-cache -f
+USER pptruser
+
 WORKDIR /home/pptruser/app
 COPY --chown=pptruser:pptruser package.json ./
 RUN npm install --omit=dev

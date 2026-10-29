@@ -68,7 +68,7 @@ class Dashboard{
   // POST /render/cards/:id/slides/:no  (image/png body)
   saveSlide(cardId,slideNo,buffer){
     return this.req('/render/cards/'+encodeURIComponent(cardId)+'/slides/'+slideNo,
-      {method:'POST',headers:{'Content-Type':'image/png'},body:buffer});
+      {method:'POST',headers:{'Content-Type':'image/jpeg'},body:buffer});
   }
 
   // POST /render/cards/:id/complete  -> flips the card to slides_ready

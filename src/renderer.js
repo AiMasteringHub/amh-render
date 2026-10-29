@@ -5,44 +5,49 @@ const { slideDocument, defaultSlideInner } = require('./vocabulary');
 const { templateForPost } = require('./pack');
 
 
-// --- Optimisation 1: cache base64-encoded images per render run ---
-const _imgCache = new Map();
 function toEmbeddable(p){
-  if(!p) return null; 
+  if(!p) return null;
   if(/^(https?:|data:)/i.test(p)) return p;
-  if(_imgCache.has(p)) return _imgCache.get(p);
   const buf=fs.readFileSync(p);
   const ext=(path.extname(p).slice(1)||'png').toLowerCase();
   const mime=ext==='svg'?'image/svg+xml':('image/'+(ext==='jpg'?'jpeg':ext));
-  const uri='data:'+mime+';base64,'+buf.toString('base64');
-  _imgCache.set(p, uri);
-  return uri;
+  return 'data:'+mime+';base64,'+buf.toString('base64');
 }
-function clearImageCache(){ _imgCache.clear(); }
 
 function canvasOf(pack, post, opts = {}){
   const c = (pack && pack.canvas) || {};
+
+  // Explicit render dimensions override the design pack.
+  // Used by Facebook to render 1080 x 1080.
   const width =
     Number(opts.width) ||
     Number(post && post.width);
+
   const height =
     Number(opts.height) ||
     Number(post && post.height);
+
   if (width > 0 && height > 0) {
     return { w: width, h: height };
   }
+
+  // Safety fallback if platform is supplied but dimensions are not.
   if (
     post &&
     String(post.platform || '').toLowerCase() === 'facebook'
   ) {
     return { w: 1080, h: 1080 };
   }
+
+  // Normal design-pack dimensions, e.g. Instagram 1080 x 1350.
   return {
     w: Number(c.w) || 1080,
     h: Number(c.h) || 1350
   };
 }
 
+// Theme fields the packs read on top of what makeTheme already supplies.
+// Same derivation as APEX page 165 so the preview and the PNG match.
 function pick(){ for(const v of arguments){ if(v!=null && v!=='') return v; } return null; }
 function hexOf(v){ if(!v) return null; if(typeof v==='object') v=v.hex; return (typeof v==='string' && /^#?[0-9a-f]{3,6}$/i.test(v)) ? (v[0]==='#'?v:'#'+v) : null; }
 function extendTheme(theme, brand){
@@ -68,6 +73,7 @@ function buildSlideHtml(post, i, opts){
 
   let templateIndex = (opts.templateIndex!=null) ? opts.templateIndex
                         : templateForPost(opts.postIndex||0, TEMPLATES.length);
+  // bound any stored index into this pack's layout count (RENDER_POST already clamps; this is the guard)
   templateIndex = ((Number(templateIndex) % TEMPLATES.length) + TEMPLATES.length) % TEMPLATES.length;
   const tpl = TEMPLATES[templateIndex];
 
@@ -90,21 +96,12 @@ function withDeadline(promise, ms, label){
   ]);
 }
 
-// --- Optimisation 2: fontReady flag skips font loading after the first slide per page ---
-// --- Optimisation 3: domcontentloaded instead of networkidle0 ---
-// --- Optimisation 4: JPEG at quality 92 instead of PNG ---
-async function renderOne(page, post, i, opts, fam, fontReady){
+async function renderOne(page, post, i, opts, fam){
   const { html, template, canvas } = buildSlideHtml(post, i, opts);
   await withDeadline(page.setContent(html, { waitUntil:'domcontentloaded' }), 20000, 'setContent');
-  if(!fontReady){
-    try{
-      await withDeadline(page.evaluateHandle('document.fonts.ready'), 10000, 'fonts.ready');
-      await withDeadline(page.evaluate(f=>document.fonts.load('700 100px "'+f+'"'), fam), 10000, 'fonts.load');
-    }catch(e){}
-  }
   const buffer = await withDeadline(
-    page.screenshot({ type:'jpeg', quality:92, clip:{x:0,y:0,width:canvas.w,height:canvas.h} }),
-    20000, 'screenshot'
+    page.screenshot({ type:'jpeg', quality:90, clip:{x:0,y:0,width:canvas.w,height:canvas.h} }),
+    30000, 'screenshot'
   );
   return { index:i+1, buffer, template };
 }
@@ -120,7 +117,7 @@ async function renderSlides(post, opts={}){
   const canvas = canvasOf(opts.pack, post, opts);
   const out = new Array(n);
   const poolSize = Math.min(
-    Math.max(1, Number(opts.concurrency || process.env.RENDER_CONCURRENCY || 4)),
+    Math.max(1, Number(opts.concurrency || process.env.RENDER_CONCURRENCY || 2)),
     n
   );
   let next = 0;
@@ -137,21 +134,17 @@ async function renderSlides(post, opts={}){
   }
   async function worker(){
     let page = await openPage();
-    let fontReady = false;
     try{
       while(true){
         const i = next++;
         if(i >= n) break;
         try{
-          out[i] = await renderOne(page, post, i, opts, fam, fontReady);
-          fontReady = true;
+          out[i] = await renderOne(page, post, i, opts, fam);
         }catch(e){
           console.error('slide', i, 'failed, retrying on a fresh page:', e.message||e);
           discardPage(page);
           page = await openPage();
-          fontReady = false;
-          out[i] = await renderOne(page, post, i, opts, fam, fontReady);
-          fontReady = true;
+          out[i] = await renderOne(page, post, i, opts, fam);
         }
       }
     } finally {
@@ -164,7 +157,6 @@ async function renderSlides(post, opts={}){
     await Promise.all(workers);
     return out;
   } finally {
-    clearImageCache();
     if(!opts.browser) await browser.close();
   }
 }
