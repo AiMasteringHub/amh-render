@@ -10,7 +10,7 @@ const dashboard=new Dashboard(process.env.DASHBOARD_API_BASE_URL, process.env.RE
 let browserPromise=null;
 function getBrowser(){
   if(!browserPromise){
-    browserPromise = puppeteer.launch({
+    browserPromise = puppeteer.launch({ 
       headless: 'new',
       protocolTimeout: 300000,
           args: [
