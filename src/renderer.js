@@ -117,7 +117,7 @@ async function renderSlides(post, opts={}){
   const canvas = canvasOf(opts.pack, post, opts);
   const out = new Array(n);
   const poolSize = Math.min(
-    Math.max(1, Number(opts.concurrency || process.env.RENDER_CONCURRENCY || 2)),
+    Math.max(1, Number(opts.concurrency || process.env.RENDER_CONCURRENCY || 1)),
     n
   );
   let next = 0;
