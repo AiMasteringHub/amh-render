@@ -88,9 +88,6 @@ function buildSlideHtml(post, i, opts){
   if (post.showLogo === 'N') { theme.NAME = ''; }
   const html = slideDocument(slide, i, post, tpl, post.slides.length,
     { imageUrl, logoUrl, brand, theme, slideInner, canvas });
-  
-  const html = slideDocument(slide, i, post, tpl, post.slides.length,
-    { imageUrl, logoUrl, brand, theme, slideInner, canvas });
   return { html, template: tpl.name, canvas };
 }
 
