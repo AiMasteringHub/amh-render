@@ -4,6 +4,7 @@ FROM ghcr.io/puppeteer/puppeteer:23.11.1
 USER root
 COPY fonts /usr/local/share/fonts/manrope
 RUN fc-cache -f
+RUN mkdir -p /home/pptruser/app && chown pptruser:pptruser /home/pptruser/app
 USER pptruser
 
 WORKDIR /home/pptruser/app
