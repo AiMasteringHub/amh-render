@@ -5,9 +5,18 @@ const { slideDocument, defaultSlideInner } = require('./vocabulary');
 const { templateForPost } = require('./pack');
 
 
-function toEmbeddable(p){
+async function toEmbeddable(p){
   if(!p) return null;
-  if(/^(https?:|data:)/i.test(p)) return p;
+  if(/^data:/i.test(p)) return p;
+  if(/^https?:/i.test(p)){
+    try{
+      const res=await fetch(p);
+      if(!res.ok){ console.error('Image fetch failed:',p,res.status); return null; }
+      const buf=Buffer.from(await res.arrayBuffer());
+      const ct=res.headers.get('content-type')||'image/jpeg';
+      return 'data:'+ct+';base64,'+buf.toString('base64');
+    }catch(e){ console.error('Image fetch error:',p,e.message); return null; }
+  }
   const buf=fs.readFileSync(p);
   const ext=(path.extname(p).slice(1)||'png').toLowerCase();
   const mime=ext==='svg'?'image/svg+xml':('image/'+(ext==='jpg'?'jpeg':ext));
@@ -63,7 +72,7 @@ function extendTheme(theme, brand){
   });
 }
 
-function buildSlideHtml(post, i, opts){
+async function buildSlideHtml(post, i, opts){
   const pack = opts.pack;
   const brand = pack.brand;
   const theme = extendTheme(makeTheme(brand), brand);
@@ -73,18 +82,17 @@ function buildSlideHtml(post, i, opts){
 
   let templateIndex = (opts.templateIndex!=null) ? opts.templateIndex
                         : templateForPost(opts.postIndex||0, TEMPLATES.length);
-  // bound any stored index into this pack's layout count (RENDER_POST already clamps; this is the guard)
   templateIndex = ((Number(templateIndex) % TEMPLATES.length) + TEMPLATES.length) % TEMPLATES.length;
   const tpl = TEMPLATES[templateIndex];
 
   if(!tpl) throw new Error('templateIndex '+templateIndex+' out of range for this pack ('+TEMPLATES.length+' layouts)');
   const slide = post.slides[i] || {};
-  const imageUrl = toEmbeddable(slide.imageUrl || opts.imageUrl || post.imageUrl || null);
+  const imageUrl = await toEmbeddable(slide.imageUrl || opts.imageUrl || post.imageUrl || null);
   const wantLight = tpl.logoColor==='dark';
-  
+
   const logoRaw = wantLight ? (brand.logoOnLight || brand.logoOnDark)
                             : (brand.logoOnDark  || brand.logoOnLight);
-  const logoUrl = (post.showLogo === 'N') ? null : toEmbeddable(logoRaw);
+  const logoUrl = (post.showLogo === 'N') ? null : await toEmbeddable(logoRaw);
   if (post.showLogo === 'N') { theme.NAME = ''; theme.FOOTER = ''; }
   const html = slideDocument(slide, i, post, tpl, post.slides.length,
     { imageUrl, logoUrl, brand, theme, slideInner, canvas });
@@ -99,7 +107,7 @@ function withDeadline(promise, ms, label){
 }
 
 async function renderOne(page, post, i, opts, fam){
-  const { html, template, canvas } = buildSlideHtml(post, i, opts);
+  const { html, template, canvas } = await buildSlideHtml(post, i, opts);
   await withDeadline(page.setContent(html, { waitUntil:'domcontentloaded' }), 20000, 'setContent');
   const buffer = await withDeadline(
     page.screenshot({ type:'jpeg', quality:90, clip:{x:0,y:0,width:canvas.w,height:canvas.h} }),
