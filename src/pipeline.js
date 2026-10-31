@@ -13,8 +13,18 @@ async function renderCardAndSave(dashboard, cardId, opts={}){
 
     // brand must resolve first — resolvePackAsync may use it internally
     const brandRaw = await dashboard.getBrandKit(post.clientId);
+    console.log('[DEBUG] brandRaw keys:', Object.keys(brandRaw||{}));
+    console.log('[DEBUG] brandRaw.footer:', JSON.stringify(brandRaw&&brandRaw.footer));
+    console.log('[DEBUG] brandRaw.website:', JSON.stringify(brandRaw&&brandRaw.website));
+    console.log('[DEBUG] brandRaw.url:', JSON.stringify(brandRaw&&brandRaw.url));
+    console.log('[DEBUG] brandRaw.domain:', JSON.stringify(brandRaw&&brandRaw.domain));
+    console.log('[DEBUG] brandRaw.name:', JSON.stringify(brandRaw&&brandRaw.name));
+    console.log('[DEBUG] post.showLogo:', JSON.stringify(post.showLogo));
+    console.log('[DEBUG] post slides imageUrls:', JSON.stringify((post.slides||[]).map(s=>s.imageUrl)));
     const pack = opts.pack || await resolvePackAsync({ cccId: cardId, clientId: post.clientId, brand: brandRaw });
     if(!pack.brand) pack.brand = brandRaw;
+    console.log('[DEBUG] pack.brand.footer:', JSON.stringify(pack.brand&&pack.brand.footer));
+    console.log('[DEBUG] pack has custom slideInner:', !!pack.slideInner);
 
     const count = pack.buildTemplates(makeTheme(pack.brand)).length;
     const templateIndex = (opts.templateIndex!=null) ? opts.templateIndex

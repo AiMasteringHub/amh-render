@@ -93,7 +93,9 @@ async function buildSlideHtml(post, i, opts){
   const logoRaw = wantLight ? (brand.logoOnLight || brand.logoOnDark)
                             : (brand.logoOnDark  || brand.logoOnLight);
   const logoUrl = (post.showLogo === 'N') ? null : await toEmbeddable(logoRaw);
+  if(i===0) console.log('[DEBUG] slide 0: theme.FOOTER='+JSON.stringify(theme.FOOTER)+' theme.NAME='+JSON.stringify(theme.NAME)+' showLogo='+JSON.stringify(post.showLogo)+' imageUrl='+(imageUrl?imageUrl.slice(0,60)+'...':'null')+' logoUrl='+(logoUrl?logoUrl.slice(0,60)+'...':'null'));
   if (post.showLogo === 'N') { theme.NAME = ''; theme.FOOTER = ''; }
+  if(i===0) console.log('[DEBUG] slide 0 after showLogo check: theme.FOOTER='+JSON.stringify(theme.FOOTER)+' theme.NAME='+JSON.stringify(theme.NAME));
   const html = slideDocument(slide, i, post, tpl, post.slides.length,
     { imageUrl, logoUrl, brand, theme, slideInner, canvas });
   return { html, template: tpl.name, canvas };
