@@ -28,15 +28,16 @@ function sizeFor(s,isCover,isPunch,isCta){
   return '52px';
 }
 
-function logoMarkup(color, logoUrl, brand){
+function logoMarkup(color, logoUrl, brand, nameOverride){
   if(logoUrl){
     return '<img src="'+logoUrl+'" alt="logo" style="height:130px;width:auto;display:block;margin:0 auto;">';
   }
+  const name = nameOverride!=null ? nameOverride : ((brand && brand.name) || 'Brand');
+  if(!name) return '';
   const cols = (brand && brand.colours) || {};
   const c = color==='dark'
     ? ((cols.ink && cols.ink.hex) || '#0C1316')
     : ((cols.white && cols.white.hex) || '#FFFFFF');
-  const name = (brand && brand.name) || 'Brand';
   return '<div style="text-align:center;line-height:1;">'
     +'<div style="font-size:56px;font-weight:800;letter-spacing:-2px;color:'+c+';">'+esc(name)+'</div></div>';
 }
@@ -83,7 +84,7 @@ function defaultSlideInner(s,i,post,tpl,n,opts,theme){
     ? '<span style="color:'+tpl.footerColor+';font-size:30px;letter-spacing:.04em;">'+esc(footerTxt)+'</span>'
     : '';
   const content='<div style="position:absolute;inset:0;padding:96px 88px 92px;display:flex;flex-direction:column;">'
-    +'<div style="margin:0 auto;">'+logoMarkup(tpl.logoColor,logoUrl,brand)+'</div>'
+    +'<div style="margin:0 auto;">'+logoMarkup(tpl.logoColor,logoUrl,brand,theme.NAME)+'</div>'
     +'<div style="flex:1;display:flex;flex-direction:column;justify-content:'+tpl.justify+';padding:40px 0;text-align:'+tpl.align+';">'
     +'<div style="width:100%;'+panelStyle+'">'+inner+'</div></div>'
     +'<div style="position:relative;display:flex;align-items:center;justify-content:center;">'+footer
