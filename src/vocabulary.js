@@ -78,7 +78,7 @@ function defaultSlideInner(s,i,post,tpl,n,opts,theme){
   if(s.accent) inner+='<p style="margin:24px 0 0;font-weight:700;line-height:1.12;letter-spacing:-.01em;color:'+tpl.accentColor+';font-size:'+(isPunch?'62px':(isCover?'46px':'40px'))+';">'+esc(s.accent)+'</p>';
   if(isCta) inner+='<div style="margin-top:40px;display:inline-flex;align-items:center;gap:12px;background:'+tpl.ctaBg+';color:'+tpl.ctaColor+';padding:22px 40px;border-radius:999px;font-size:34px;font-weight:700;">&#8595;  '+esc(s.cta)+'</div>';
   const panelStyle=tpl.panelStyle?tpl.panelStyle:(tpl.panel?'background:'+theme.panelGlass+';backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.10);border-radius:28px;padding:56px 52px;':'');
-  const footerTxt = (brand && brand.footer) ? brand.footer : '';
+  const footerTxt = theme.FOOTER || '';
   const footer = footerTxt
     ? '<span style="color:'+tpl.footerColor+';font-size:30px;letter-spacing:.04em;">'+esc(footerTxt)+'</span>'
     : '';
