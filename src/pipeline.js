@@ -21,7 +21,7 @@ async function renderCardAndSave(dashboard, cardId, opts={}){
     console.log('[DEBUG] brandRaw.name:', JSON.stringify(brandRaw&&brandRaw.name));
     console.log('[DEBUG] post.showLogo:', JSON.stringify(post.showLogo));
     console.log('[DEBUG] post slides imageUrls:', JSON.stringify((post.slides||[]).map(s=>s.imageUrl)));
-    const pack = opts.pack || await resolvePackAsync({ cccId: cardId, clientId: post.clientId, brand: brandRaw });
+    const pack = opts.pack || await resolvePackAsync({ cccId: cardId, clientId: post.clientId, brand: brandRaw, dashboard });
     if(!pack.brand) pack.brand = brandRaw;
     console.log('[DEBUG] pack.brand.footer:', JSON.stringify(pack.brand&&pack.brand.footer));
     console.log('[DEBUG] pack has custom slideInner:', !!pack.slideInner);

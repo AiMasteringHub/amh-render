@@ -105,12 +105,14 @@ async function fetchPackJson(cccId){
 // Production resolver: layout code from SLIDE_PACKS for the card, brand tokens from
 // the dashboard. Falls back to the folder pack if the database is unreachable, so a
 // render still succeeds.
-//   opts = { cccId, clientId, brand?, packsDir? }
+//   opts = { cccId, clientId, brand?, packsDir?, dashboard? }
 async function resolvePackAsync(opts){
   opts = opts || {};
   if(!PACKS_FROM_DB || !opts.cccId) return resolvePack(opts);
   try{
-    const p = await fetchPackJson(opts.cccId);
+    const p = opts.dashboard
+      ? await opts.dashboard.getPack(opts.cccId)
+      : await fetchPackJson(opts.cccId);
     const key = p.packId + ':' + p.version;
     let code = cache.get(key);
     if(!code){
