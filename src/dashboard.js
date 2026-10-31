@@ -40,6 +40,7 @@ class Dashboard{
     tag:c.topic||'',
     imageUrl:c.imageUrl||null,
     templateIndex:(c.templateIndex!=null?c.templateIndex:null),
+        showLogo: c.showLogo || 'Y',
 
     slides:(c.slides||[]).map(s=>{
       const isCta=/cta/i.test(s.label||'');
