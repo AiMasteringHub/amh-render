@@ -81,9 +81,14 @@ function buildSlideHtml(post, i, opts){
   const slide = post.slides[i] || {};
   const imageUrl = toEmbeddable(slide.imageUrl || opts.imageUrl || post.imageUrl || null);
   const wantLight = tpl.logoColor==='dark';
-    const logoRaw = wantLight ? (brand.logoOnLight || brand.logoOnDark)
+  
+  const logoRaw = wantLight ? (brand.logoOnLight || brand.logoOnDark)
                             : (brand.logoOnDark  || brand.logoOnLight);
   const logoUrl = (post.showLogo === 'N') ? null : toEmbeddable(logoRaw);
+  if (post.showLogo === 'N') { theme.NAME = ''; }
+  const html = slideDocument(slide, i, post, tpl, post.slides.length,
+    { imageUrl, logoUrl, brand, theme, slideInner, canvas });
+  
   const html = slideDocument(slide, i, post, tpl, post.slides.length,
     { imageUrl, logoUrl, brand, theme, slideInner, canvas });
   return { html, template: tpl.name, canvas };
