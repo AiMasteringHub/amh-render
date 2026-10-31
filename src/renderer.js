@@ -62,7 +62,7 @@ function hexOf(v){ if(!v) return null; if(typeof v==='object') v=v.hex; return (
 function extendTheme(theme, brand){
   brand = brand || {};
   const name = pick(brand.name, brand.businessName, brand.company, '');
-  const web  = String(pick(brand.footer, brand.website, brand.url, brand.domain, '')).replace(/^https?:\/\//i,'').replace(/\/$/,'');
+  const web  = String(pick(brand.footer, brand.website, brand.url, brand.domain, '') || '').replace(/^https?:\/\//i,'').replace(/\/$/,'');
   const fam  = brand.font && brand.font.family;
   return Object.assign({}, theme, {
     SECONDARY: pick(theme.SECONDARY, hexOf(brand.secondary), theme.ACCENT),

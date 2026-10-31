@@ -54,7 +54,7 @@ function normaliseBrand(raw){
   const font = raw.font || {};
   return {
     name: raw.name || 'Brand',
-    footer: raw.footer || '',
+    footer: raw.footer || raw.website || raw.url || raw.domain || '',
     font: {
       family: font.family || 'Manrope',
       url: font.url ||
