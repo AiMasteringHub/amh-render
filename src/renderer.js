@@ -87,6 +87,12 @@ async function buildSlideHtml(post, i, opts){
 
   if(!tpl) throw new Error('templateIndex '+templateIndex+' out of range for this pack ('+TEMPLATES.length+' layouts)');
   const slide = post.slides[i] || {};
+  // ── Line-break preservation (same technique as Page 165) ──
+  const NL = '\u2063';
+  const origMain = slide.main, origCta = slide.cta;
+  if (slide.main) slide.main = slide.main.replace(/\n/g, NL);
+  if (slide.cta)  slide.cta  = slide.cta.replace(/\n/g, NL); 
+  
   const imageUrl = await toEmbeddable(slide.imageUrl || opts.imageUrl || post.imageUrl || null);
   const wantLight = tpl.logoColor==='dark';
 
@@ -96,9 +102,17 @@ async function buildSlideHtml(post, i, opts){
   if(i===0) console.log('[DEBUG] slide 0: theme.FOOTER='+JSON.stringify(theme.FOOTER)+' theme.NAME='+JSON.stringify(theme.NAME)+' showLogo='+JSON.stringify(post.showLogo)+' imageUrl='+(imageUrl?imageUrl.slice(0,60)+'...':'null')+' logoUrl='+(logoUrl?logoUrl.slice(0,60)+'...':'null'));
   if (post.showLogo === 'N') { theme.NAME = ''; theme.FOOTER = ''; }
   if(i===0) console.log('[DEBUG] slide 0 after showLogo check: theme.FOOTER='+JSON.stringify(theme.FOOTER)+' theme.NAME='+JSON.stringify(theme.NAME));
-  const html = slideDocument(slide, i, post, tpl, post.slides.length,
+  
+    let html = slideDocument(slide, i, post, tpl, post.slides.length,
     { imageUrl, logoUrl, brand, theme, slideInner, canvas });
+
+  // Restore original text and convert markers to visible line breaks
+  slide.main = origMain;
+  slide.cta  = origCta;
+  html = html.replace(/\u2063/g, '<br>');
+
   return { html, template: tpl.name, canvas };
+  
 }
 
 function withDeadline(promise, ms, label){
